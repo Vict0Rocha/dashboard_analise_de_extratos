@@ -1,0 +1,7 @@
+pandas
+openpyxl
+xlsxwriter
+matplotlib
+streamlit
+plotly
+reportlab

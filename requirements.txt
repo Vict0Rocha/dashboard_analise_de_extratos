@@ -1,7 +1,8 @@
+streamlit
 pandas
 openpyxl
+plotly
 xlsxwriter
 matplotlib
-streamlit
-plotly
 reportlab
+Pillow

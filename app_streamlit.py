@@ -389,9 +389,31 @@ def preparar_extrato(df_bruto: pd.DataFrame) -> pd.DataFrame:
     for coluna in ["PAGAMENTO", "DESCRICAO", "ONDE LANÇAR", "DOCUMENTO", "PLANO FINANCEIRO"]:
         df[coluna] = df[coluna].apply(limpar_texto)
 
-    df["VALOR"] = df["ENTRADA"] + df["SAÍDA"]
-    df["TIPO"] = df["VALOR"].apply(lambda x: "ENTRADA" if x > 0 else "SAÍDA" if x < 0 else "ZERADO")
+    def classificar_tipo(row):
+        entrada = float(row.get("ENTRADA", 0) or 0)
+        saida = float(row.get("SAÍDA", 0) or 0)
+
+        if saida != 0 and entrada == 0:
+            return "SAÍDA"
+
+        if entrada != 0 and saida == 0:
+            return "ENTRADA"
+
+        if entrada != 0 and saida != 0:
+            return "MISTO"
+
+        return "ZERADO"
+
+    # GASTO sempre será positivo, mesmo que a coluna SAÍDA venha negativa.
     df["GASTO"] = df["SAÍDA"].abs()
+
+    # VALOR representa o impacto financeiro real da linha:
+    # entrada aumenta, saída diminui.
+    df["VALOR"] = df["ENTRADA"] - df["GASTO"]
+
+    # TIPO agora depende da coluna preenchida, não mais do sinal do valor.
+    df["TIPO"] = df.apply(classificar_tipo, axis=1)
+
     df["ANO_MES"] = df["DATA"].dt.to_period("M").astype(str)
     df["DIA"] = df["DATA"].dt.date
 
